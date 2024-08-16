@@ -251,12 +251,14 @@ export class Filter extends Array {
      * @member {String}
      */
     expression;
+
+    #definition;
     
     /**
      * Instantiate and parse a new SCIM filter string or expression
      * @param {String|Object|Object[]} expression - the query string to parse, or an existing filter expression object or set of objects
      */
-    constructor(expression) {
+    constructor(expression, definition) {
         // See if we're dealing with an expression string
         const isString = typeof expression === "string";
         
@@ -277,6 +279,8 @@ export class Filter extends Array {
         
         // Save the original expression string, or stringify expression objects
         this.expression = (isString ? expression : Filter.#stringify(this));
+
+        this.#definition = definition;
         
         Object.freeze(this);
     }
@@ -292,6 +296,9 @@ export class Filter extends Array {
             this.some(f => (f !== Object(f) ? false : Object.entries(f).every(([attr, expressions]) => {
                 let [,actual] = Object.entries(value).find(([key]) => key.toLowerCase() === attr.toLowerCase()) ?? [];
                 const isActualDate = (actual instanceof Date || (new Date(actual).toString() !== "Invalid Date" && String(actual).match(isoDate)));
+                const attrDefinition = this.#definition?.attribute(attr);
+                const isCaseExact = attrDefinition?.config?.caseExact ?? true;
+                const isString = attrDefinition?.type === "string";
                 
                 if (Array.isArray(actual)) {
                     // Handle multivalued attributes by diving into them
@@ -314,6 +321,11 @@ export class Filter extends Array {
                         // For equality tests, cast true and false strings to boolean values, maintaining EntraID support
                         if (["eq", "ne"].includes(comparator.toLowerCase()) && typeof actual === "boolean" && typeof expected === "string")
                             expected = (expected.toLowerCase() === "false" ? false : (expected.toLowerCase() === "true" ? true : expected));
+
+                        if (attrDefinition && isString && !isCaseExact) {
+                            actual = String(actual).toLowerCase();
+                            expected = String(expected).toLowerCase();
+                        }
                         
                         switch (comparator.toLowerCase()) {
                             default:

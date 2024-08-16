@@ -265,7 +265,7 @@ export class Resource {
             if (typeof params.filter !== "string" || !params.filter.trim().length)
                 throw new SCIMError(400, "invalidFilter", "Expected filter to be a non-empty string");
             
-            this.filter = new Filter(params.filter);
+            this.filter = new Filter(params.filter, this);
         }
         
         // Handle excluded attributes
