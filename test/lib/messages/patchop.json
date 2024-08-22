@@ -131,6 +131,21 @@
         "ops": [
           {"op": "replace", "path": "emails[type eq \"work\"].value", "value": "test@example.com"}
         ]
+      },
+      {
+        "source": {
+          "id": "1234", "userName": "asdf",
+          "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended": {"extendedComplex": {}}
+        },
+        "target": {
+          "id": "1234", "userName": "asdf",
+          "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended": {"extendedComplex": {"subStr": "added"}}
+        },
+        "ops": [
+          {"op": "replace", "value": {
+            "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended:extendedComplex.subStr": "added"
+          }}
+        ]
       }
     ]
   }

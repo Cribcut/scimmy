@@ -287,6 +287,60 @@ const validate = {
     }
 }
 
+function defineSubAttributes(target, resource, name, subAttributes, direction) {
+    // Go through each sub-attribute for coercion
+    for (let subAttribute of subAttributes) {
+        const {name} = subAttribute;
+
+        // Predefine getters and setters for all possible sub-attributes
+        Object.defineProperties(target, {
+            // Because why bother with case-sensitivity in a JSON-based standard?
+            // See: RFC7643§2.1 (https://datatracker.ietf.org/doc/html/rfc7643#section-2.1)
+            [name.toLowerCase()]: {
+                get: () => (target[name]),
+                set: (value) => (target[name] = value)
+            },
+            // Now set the handles for the actual name
+            // Overrides above if name is already all lower case
+            [name]: {
+                enumerable: true,
+                // Get and set the value from the internally scoped object
+                get: () => (resource[name]),
+                // Validate the supplied value through attribute coercion
+                set: (value) => {
+                    try {
+                        return (resource[name] = subAttribute.coerce(value, direction))
+                    } catch (ex) {
+                        // Add additional context
+                        ex.message += ` from complex attribute '${name}'`;
+                        throw ex;
+                    }
+                }
+            }
+        });
+    }
+}
+
+/**
+ * Deeply check whether a targeted object has any properties with actual values
+ * @param {Object} target - object to deeply check for values
+ * @returns {Boolean} whether the target object, or any of its object properties, have a value other than undefined
+ * @private
+ */
+const hasActualValues = (target) => (Object.values(target).some((v) => typeof v === "object" ? hasActualValues(v) : v !== undefined));
+
+function defineToJSON(target, resource, subAttributes) {
+    // Set "toJSON" method on target so subAttributes can be filtered
+    Object.defineProperty(target, "toJSON", {
+        value: () => {
+            if (!resource || !hasActualValues(resource)) return undefined;
+            return Object.entries(resource)
+                .filter(([name]) => ![false, "never"].includes(subAttributes.find(a => a.name === name).config.returned))
+                .reduce((res, [name, value]) => Object.assign(res, {[name]: value}), {})
+        }
+    });
+}
+
 /**
  * SCIM Attribute Type
  * @alias SCIMMY.Types.Attribute
@@ -527,44 +581,9 @@ export class Attribute {
                         
                         let resource = {};
                         
-                        // Go through each sub-attribute for coercion
-                        for (let subAttribute of this.subAttributes) {
-                            const {name} = subAttribute;
-                            
-                            // Predefine getters and setters for all possible sub-attributes
-                            Object.defineProperties(target, {
-                                // Because why bother with case-sensitivity in a JSON-based standard?
-                                // See: RFC7643§2.1 (https://datatracker.ietf.org/doc/html/rfc7643#section-2.1)
-                                [name.toLowerCase()]: {
-                                    get: () => (target[name]),
-                                    set: (value) => (target[name] = value)
-                                },
-                                // Now set the handles for the actual name
-                                // Overrides above if name is already all lower case
-                                [name]: {
-                                    enumerable: true,
-                                    // Get and set the value from the internally scoped object
-                                    get: () => (resource[name]),
-                                    // Validate the supplied value through attribute coercion
-                                    set: (value) => {
-                                        try {
-                                            return (resource[name] = subAttribute.coerce(value, direction))
-                                        } catch (ex) {
-                                            // Add additional context
-                                            ex.message += ` from complex attribute '${this.name}'`;
-                                            throw ex;
-                                        }
-                                    }
-                                }
-                            });
-                        }
-                        
-                        // Set "toJSON" method on target so subAttributes can be filtered
-                        Object.defineProperty(target, "toJSON", {
-                            value: () => Object.entries(resource)
-                                .filter(([name]) => ![false, "never"].includes(this.subAttributes.find(a => a.name === name).config.returned))
-                                .reduce((res, [name, value]) => Object.assign(res, {[name]: value}), {})
-                        });
+                        defineSubAttributes(target, resource, this.name, this.subAttributes, direction);
+
+                        defineToJSON(target, resource, this.subAttributes);
                         
                         // Prevent changes to target
                         Object.freeze(target);
@@ -602,6 +621,15 @@ export class Attribute {
                 
                 default:
                     return source;
+            }
+
+            if (!source && this.subAttributes?.length && !multiValued) {
+                const target = {};
+                const resource = {};
+                defineSubAttributes(target, resource, this.name, this.subAttributes, direction);
+                defineToJSON(target, resource, this.subAttributes);
+                Object.freeze(target);
+                return target;
             }
         }
     }

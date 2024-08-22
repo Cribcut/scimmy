@@ -2,6 +2,15 @@ import {SchemaDefinition} from "./definition.js";
 import {Attribute} from "./attribute.js";
 import {SCIMError} from "./error.js";
 
+
+/**
+ * Deeply check whether a targeted object has any properties with actual values
+ * @param {Object} target - object to deeply check for values
+ * @returns {Boolean} whether the target object, or any of its object properties, have a value other than undefined
+ * @private
+ */
+const hasActualValues = (target) => (Object.values(target).some((v) => typeof v === "object" ? hasActualValues(v) : v !== undefined));
+
 /**
  * Define the "toJSON" property for the given target
  * @param {Object} target - the object to define the "toJSON" property on
@@ -11,18 +20,12 @@ import {SCIMError} from "./error.js";
  * @private
  */
 const defineToJSONProperty = (target, definition, resource) => Object.defineProperty(target, "toJSON", {
-    value: () => Object.entries(resource)
+    value: () =>  Object.entries(resource)
         .filter(([name]) => ![false, "never"].includes(definition.attribute(name)?.config?.returned))
+        .filter(([name, value]) => value && (typeof value !== "object" || hasActualValues(value)))
         .reduce((res, [name, value]) => Object.assign(res, {[name]: value}), {})
 });
 
-/**
- * Deeply check whether a targeted object has any properties with actual values
- * @param {Object} target - object to deeply check for values
- * @returns {Boolean} whether the target object, or any of its object properties, have a value other than undefined
- * @private
- */
-const hasActualValues = (target) => (Object.values(target).some((v) => typeof v === "object" ? hasActualValues(v) : v !== undefined));
 
 /**
  * SCIM Schema Type
@@ -147,15 +150,7 @@ export class Schema {
                 enumerable: true,
                 // Get and set the value from the internally scoped object
                 get: () => {
-                    // Go through and delete any undefined properties or complex attributes without actual values
-                    for (let [key, value] of Object.entries(resource[extension.id] ?? {})) {
-                        if (value === undefined || (Object(value) === value && !hasActualValues(value))) {
-                            delete resource[extension.id][key];
-                        }
-                    }
-                    
-                    // If no attributes with values remaining, return undefined
-                    return !hasActualValues(resource[extension.id] ?? {}) ? undefined : resource[extension.id];
+                    return resource[extension.id];
                 },
                 set: (value) => {
                     try {

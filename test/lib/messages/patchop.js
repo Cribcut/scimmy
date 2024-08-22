@@ -25,9 +25,18 @@ const TestSchema = createSchemaClass({
             new Attribute("string", "display", {mutable: "immutable"}),
             new Attribute("reference", "$ref", {mutable: "immutable", referenceTypes: ["User", "Group"]}),
             new Attribute("string", "type", {mutable: "immutable", canonicalValues: ["User", "Group"]})
+        ]),
+    ]
+});
+const TestSchemaExtended = createSchemaClass({
+    name: "TestExtended", id: "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended", description: "A Test Extended",
+    attributes: [
+        new Attribute("complex", "extendedComplex", {}, [
+            new Attribute("string", "subStr", {}),
         ])
     ]
 });
+TestSchema.definition.extend(TestSchemaExtended.definition);
 
 describe("SCIMMY.Messages.PatchOp", () => {
     describe("@constructor", () => {
