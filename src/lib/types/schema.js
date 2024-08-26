@@ -22,7 +22,7 @@ const hasActualValues = (target) => (Object.values(target).some((v) => typeof v 
 const defineToJSONProperty = (target, definition, resource) => Object.defineProperty(target, "toJSON", {
     value: () =>  Object.entries(resource)
         .filter(([name]) => ![false, "never"].includes(definition.attribute(name)?.config?.returned))
-        .filter(([name, value]) => value && (typeof value !== "object" || hasActualValues(value)))
+        .filter(([name, value]) => value !== undefined && (typeof value !== "object" || hasActualValues(value)))
         .reduce((res, [name, value]) => Object.assign(res, {[name]: value}), {})
 });
 

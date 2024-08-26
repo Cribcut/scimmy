@@ -146,6 +146,23 @@
             "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended:extendedComplex.subStr": "added"
           }}
         ]
+      },
+      {
+        "source": {
+          "id": "1234", "userName": "asdf",
+          "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended": {"extendedComplex": {}}
+        },
+        "target": {
+          "id": "1234", "userName": "asdf",
+          "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended": {"extendedComplex": {"subStr": "added"}}
+        },
+        "ops": [
+          {
+            "op": "add", 
+            "path": "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended:extendedComplex",
+            "value": {"subStr": "added"}
+          }
+        ]
       }
     ]
   }

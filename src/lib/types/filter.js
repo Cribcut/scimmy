@@ -296,16 +296,16 @@ export class Filter extends Array {
             this.some(f => (f !== Object(f) ? false : Object.entries(f).every(([attr, expressions]) => {
                 let [,actual] = Object.entries(value).find(([key]) => key.toLowerCase() === attr.toLowerCase()) ?? [];
                 const isActualDate = (actual instanceof Date || (new Date(actual).toString() !== "Invalid Date" && String(actual).match(isoDate)));
-                const attrDefinition = this.#definition?.attribute(attr);
+                const attrDefinition = this.#definition?.attribute?.(attr);
                 const isCaseExact = attrDefinition?.config?.caseExact ?? true;
                 const isString = attrDefinition?.type === "string";
                 
                 if (Array.isArray(actual)) {
                     // Handle multivalued attributes by diving into them
-                    return !!(new Filter(expressions).match(actual).length);
+                    return !!(new Filter(expressions, attrDefinition).match(actual).length);
                 } else if (!Array.isArray(expressions)) {
                     // Handle complex attributes by diving into them
-                    return !!(new Filter([expressions]).match([actual]).length);
+                    return !!(new Filter([expressions], attrDefinition).match([actual]).length);
                 } else {
                     let result = null;
                     
