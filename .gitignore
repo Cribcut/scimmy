@@ -9,7 +9,6 @@ lerna-debug.log*
 
 # Modules, built assets, and local env files
 node_modules
-dist
 docs
 coverage
 test/results-report.json
