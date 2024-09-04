@@ -225,7 +225,11 @@ const validate = {
      * @param {*} value - the value being validated
      */
     boolean: (attrib, value) => {
-        if (typeof value !== "boolean" && value !== null) {
+        if (
+            typeof value !== "boolean" &&
+            value !== null &&
+            (typeof value !== "string" || !["true", "false"].includes(value.toLowerCase()))
+        ) {
             const type = (value instanceof Date ? "dateTime" : typeof value === "object" ? "complex" : typeof value);
             
             // Catch array and object values as they will not cast to string as expected
@@ -341,6 +345,15 @@ function defineToJSON(target, resource, subAttributes) {
                 .reduce((res, [name, value]) => Object.assign(res, {[name]: value}), {})
         }
     });
+}
+
+function coerceBoolean(value) {
+    if (typeof value === "string") {
+        if (value.toLowerCase() === "true") return true;
+        if (value.toLowerCase() === "false") return false;
+    }
+
+    return !!value;
 }
 
 /**
@@ -563,10 +576,10 @@ class Attribute {
                     for (let value of (multiValued ? source : [source])) validate.boolean(this, value);
                     
                     // Cast supplied values into booleans
-                    return (!multiValued ? !!source : new Proxy(source.map(v => !!v), {
+                    return (!multiValued ? coerceBoolean(source) : new Proxy(source.map(v => !!v), {
                         // Wrap the resulting collection with coercion
                         set: (target, key, value) => (!!(key in Object.getPrototypeOf([]) && key !== "length" ? false :
-                            (target[key] = (key === "length" ? value : validate.boolean(this, value) ?? !!value)) || true))
+                            (target[key] = (key === "length" ? value : validate.boolean(this, value) ?? coerceBoolean(value))) || true))
                     }));
                 
                 case "complex":
@@ -2031,7 +2044,7 @@ class Schema {
                         
                         // Return the value with JSON stringifier attached, marked as 
                         defineToJSONProperty(resource[extension.id], extension, resource[extension.id]);
-                        return Object.assign(Object.preventExtensions(resource[extension.id]), value);
+                        return Object.assign(resource[extension.id], value);
                     } catch (ex) {
                         // Rethrow attribute coercion exceptions as SCIM errors
                         throw new SCIMError(400, "invalidValue", ex.message);
