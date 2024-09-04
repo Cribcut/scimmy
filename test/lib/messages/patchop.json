@@ -10,6 +10,27 @@
         ]
       },
       {
+        "source": {"id": "1234", "userName": "asdf", "active": true},
+        "target": {"id": "1234", "userName": "asdf", "active": false},
+        "ops": [
+          {"op": "add", "path": "active", "value": false}
+        ]
+      },
+      {
+        "source": {"id": "1234", "userName": "asdf", "active": true},
+        "target": {"id": "1234", "userName": "asdf", "active": false},
+        "ops": [
+          {"op": "add", "path": "active", "value": "False"}
+        ]
+      },
+      {
+        "source": {"id": "1234", "userName": "asdf", "active": false},
+        "target": {"id": "1234", "userName": "asdf", "active": true},
+        "ops": [
+          {"op": "add", "path": "active", "value": "True"}
+        ]
+      },
+      {
         "source": {"id": "1234", "userName": "asdf"},
         "target": {"id": "1234", "userName": "asdf", "password": "1234"},
         "ops": [

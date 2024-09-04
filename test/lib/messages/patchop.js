@@ -15,6 +15,7 @@ const template = {schemas: [params.id]};
 // A Schema class to use in tests
 const TestSchema = createSchemaClass({
     attributes: [
+        new Attribute("boolean", "active", {required: false}),
         new Attribute("string", "userName", {required: true}), new Attribute("string", "displayName"),
         new Attribute("string", "nickName"), new Attribute("string", "password", {direction: "in", returned: false}),
         new Attribute("complex", "name", {}, [new Attribute("string", "formatted"), new Attribute("string", "honorificPrefix")]),
