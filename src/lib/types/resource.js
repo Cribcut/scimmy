@@ -252,12 +252,19 @@ export class Resource {
         // Make sure ID is valid
         if ((id !== undefined && Object(id) !== params) && (String(id) !== id || !id.length))
             throw new SCIMError(400, "invalidSyntax", "Expected 'id' parameter to be a non-empty string");
+
+        let definition;
+        try {
+            definition = this.constructor.schema?.definition;
+        } catch(e) {
+            // Skip definition if the schema doesn't define it (e.g. in some of the test code)
+        }
         
         // Handle case where ID is supplied as first argument
         if (typeof id === "string") {
             // Store the ID and create a filter to match the ID 
             this.id = id;
-            this.filter = new Filter(`id eq "${this.id}"`);
+            this.filter = new Filter(`id eq "${this.id}"`, definition);
         }
         // Parse the filter if it exists, and wasn't set by ID above
         else if ("filter" in params) {
@@ -265,7 +272,7 @@ export class Resource {
             if (typeof params.filter !== "string" || !params.filter.trim().length)
                 throw new SCIMError(400, "invalidFilter", "Expected filter to be a non-empty string");
             
-            this.filter = new Filter(params.filter);
+            this.filter = new Filter(params.filter, definition);
         }
         
         // Handle excluded attributes
@@ -275,7 +282,7 @@ export class Resource {
                 throw new SCIMError(400, "invalidFilter", "Expected excludedAttributes to be a comma-separated list string");
             
             // Convert excludedAttributes into a filter string, and instantiate a new filter
-            this.attributes = new Filter(params.excludedAttributes.split(",").map(a => `${a} np`).join(" and "));
+            this.attributes = new Filter(params.excludedAttributes.split(",").map(a => `${a} np`).join(" and "), definition);
         }
         
         // Handle attributes (overwrites excluded attributes if previously defined)
@@ -285,7 +292,7 @@ export class Resource {
                 throw new SCIMError(400, "invalidFilter", "Expected attributes to be a comma-separated list string");
             
             // Convert attributes into a filter string, and instantiate a new filter
-            this.attributes = new Filter(params.attributes.split(",").map(a => `${a} pr`).join(" and "));
+            this.attributes = new Filter(params.attributes.split(",").map(a => `${a} pr`).join(" and "), definition);
         }
         
         // Handle sort and pagination parameters

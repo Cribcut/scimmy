@@ -3,6 +3,7 @@ import path from "path";
 import url from "url";
 import assert from "assert";
 import {Filter} from "#@/lib/types/filter.js";
+import {User} from "#@/lib/schemas/user.js";
 
 // Load data to use in tests from adjacent JSON file
 const basepath = path.relative(process.cwd(), path.dirname(url.fileURLToPath(import.meta.url)));
@@ -286,7 +287,7 @@ describe("SCIMMY.Types.Filter", () => {
         const targets = [
             ["comparators", "handle matches for known comparison expressions"],
             ["nesting", "handle matching of nested attributes"],
-            ["cases", "match attribute names in a case-insensitive manner"],
+            ["cases", "match attribute names and values in a case-insensitive manner", User.definition],
             ["negations", "handle matches with negation expressions"],
             ["numbers", "correctly compare numeric attribute values"],
             ["dates", "correctly compare ISO 8601 datetime string attribute values"],
@@ -295,13 +296,13 @@ describe("SCIMMY.Types.Filter", () => {
             ["unknown", "not match unknown comparators"]
         ];
         
-        for (let [key, label] of targets) {
+        for (let [key, label, definition] of targets) {
             it(`should ${label}`, async function () {
                 const {match: {source, targets: {[key]: suite}}} = await fixtures;
                 
                 if (!suite.length) this.skip();
                 else for (let fixture of suite) {
-                    assert.deepStrictEqual(new Filter(fixture.expression).match(source).map((v) => v.id), fixture.expected,
+                    assert.deepStrictEqual(new Filter(fixture.expression, definition).match(source).map((v) => v.id), fixture.expected,
                         `Unexpected matches in '${key}' fixture #${suite.indexOf(fixture) + 1} with expression '${JSON.stringify(fixture.expression)}'`);
                 }
             });

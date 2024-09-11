@@ -15,6 +15,7 @@ const template = {schemas: [params.id]};
 // A Schema class to use in tests
 const TestSchema = createSchemaClass({
     attributes: [
+        new Attribute("boolean", "active", {required: false}),
         new Attribute("string", "userName", {required: true}), new Attribute("string", "displayName"),
         new Attribute("string", "nickName"), new Attribute("string", "password", {direction: "in", returned: false}),
         new Attribute("complex", "name", {}, [new Attribute("string", "formatted"), new Attribute("string", "honorificPrefix")]),
@@ -25,9 +26,19 @@ const TestSchema = createSchemaClass({
             new Attribute("string", "display", {mutable: "immutable"}),
             new Attribute("reference", "$ref", {mutable: "immutable", referenceTypes: ["User", "Group"]}),
             new Attribute("string", "type", {mutable: "immutable", canonicalValues: ["User", "Group"]})
+        ]),
+    ]
+});
+const TestSchemaExtended = createSchemaClass({
+    name: "TestExtended", id: "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended", description: "A Test Extended",
+    attributes: [
+        new Attribute("string", "extendedSimple", {}),
+        new Attribute("complex", "extendedComplex", {}, [
+            new Attribute("string", "subStr", {}),
         ])
     ]
 });
+TestSchema.definition.extend(TestSchemaExtended.definition);
 
 describe("SCIMMY.Messages.PatchOp", () => {
     describe("@constructor", () => {

@@ -308,6 +308,7 @@
       ],
       "cases": [
         {"expression": {"username": ["sw", "A"]}, "expected": [1]},
+        {"expression": {"userName": ["sw", "a"]}, "expected": [1]},
         {"expression": {"Name": {"fOrmaTTed": ["co", "a"]}}, "expected": [1, 2, 4]},
         {"expression": {"Name": {"fOrmaTTed": ["co", "a"]}, "emaILs": {"VALUe": ["ew", "example.net"]}}, "expected": [1, 4]}
       ],

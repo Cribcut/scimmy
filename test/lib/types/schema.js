@@ -39,10 +39,14 @@ describe("SCIMMY.Types.Schema", () => {
     });
     
     describe("@constructor", () => {
-        new SchemasHooks(createSchemaClass({attributes: [new Attribute("string", "aString")]}), fixtures).construct().call();
+        new SchemasHooks(createSchemaClass({attributes: [
+            new Attribute("string", "aString"), new Attribute("string", "aStringTwo"),
+            new Attribute("complex", "complexObj", {}, [new Attribute("string", "foo")]),
+        ]}), fixtures).construct().call();
         
         it("should include 'toJSON' method that strips attributes where returned is marked as 'never'", async () => {
-            const attributes = [new Attribute("string", "aValue"), new Attribute("string", "aString", {returned: false})];
+            const attributes = [new Attribute("string", "aValue"), new Attribute("string", "aString", {returned: false}),
+            new Attribute("complex", "complexObj", {returned: false}, [new Attribute("string", "foo")])];
             const Test = createSchemaClass({attributes});
             const source = {aValue: "a value"};
             const actual = new Test({...source, aString: "a string"});

@@ -10,6 +10,27 @@
         ]
       },
       {
+        "source": {"id": "1234", "userName": "asdf", "active": true},
+        "target": {"id": "1234", "userName": "asdf", "active": false},
+        "ops": [
+          {"op": "add", "path": "active", "value": false}
+        ]
+      },
+      {
+        "source": {"id": "1234", "userName": "asdf", "active": true},
+        "target": {"id": "1234", "userName": "asdf", "active": false},
+        "ops": [
+          {"op": "add", "path": "active", "value": "False"}
+        ]
+      },
+      {
+        "source": {"id": "1234", "userName": "asdf", "active": false},
+        "target": {"id": "1234", "userName": "asdf", "active": true},
+        "ops": [
+          {"op": "add", "path": "active", "value": "True"}
+        ]
+      },
+      {
         "source": {"id": "1234", "userName": "asdf"},
         "target": {"id": "1234", "userName": "asdf", "password": "1234"},
         "ops": [
@@ -28,6 +49,43 @@
         "target": {"id": "1234", "userName": "asdf", "members": [{"value": "f648f8d5ea4e4cd38e9c"}, {"value": "123abc", "$ref": "User"}]},
         "ops": [
           {"op": "add", "path": "members[value eq 123abc].$ref", "value": "User"}
+        ]
+      },
+      {
+        "source": {
+          "id": "1234", "userName": "asdf",
+          "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended": {"extendedComplex": {"subStr": "added"}}
+        },
+        "target": {
+          "id": "1234", "userName": "asdf",
+          "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended": {
+            "extendedComplex": {"subStr": "added"},
+            "extendedSimple": "added"
+          }
+        },
+        "ops": [
+          {
+            "op": "add",
+            "path": "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended:extendedSimple",
+            "value": "added"
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "1234", "userName": "asdf",
+          "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended": {"extendedComplex": {}}
+        },
+        "target": {
+          "id": "1234", "userName": "asdf",
+          "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended": {"extendedComplex": {"subStr": "added"}}
+        },
+        "ops": [
+          {
+            "op": "add",
+            "path": "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended:extendedComplex",
+            "value": {"subStr": "added"}
+          }
         ]
       }
     ],
@@ -130,6 +188,21 @@
         "target": {"id": "1234", "userName": "asdf", "emails": [{"type": "work", "value": "test@example.com"}]},
         "ops": [
           {"op": "replace", "path": "emails[type eq \"work\"].value", "value": "test@example.com"}
+        ]
+      },
+      {
+        "source": {
+          "id": "1234", "userName": "asdf",
+          "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended": {"extendedComplex": {"subStr": "original"}}
+        },
+        "target": {
+          "id": "1234", "userName": "asdf",
+          "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended": {"extendedComplex": {"subStr": "replaced"}}
+        },
+        "ops": [
+          {"op": "replace", "value": {
+            "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended:extendedComplex.subStr": "replaced"
+          }}
         ]
       }
     ]

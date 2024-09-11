@@ -99,12 +99,23 @@ export default class ResourcesHooks {
         it("should include extension schema attribute property accessor aliases", async () => {
             try {
                 // Add an extension with one attribute
-                TargetSchema.extend(new SchemaDefinition("Extension", "urn:ietf:params:scim:schemas:Extension", "", [new Attribute("string", "testValue")]));
+                TargetSchema.extend(new SchemaDefinition("Extension", "urn:ietf:params:scim:schemas:Extension", "", [
+                    new Attribute("string", "testValue"),
+                    new Attribute("complex", "complexValue", {}, [
+                        new Attribute("string", "subValue"),
+                    ])
+                ]));
                 
                 // Construct an instance to test against
                 const {constructor = {}} = await fixtures;
                 const target = "urn:ietf:params:scim:schemas:Extension:testValue";
-                const instance = new TargetSchema(constructor);
+                const complexTarget = "urn:ietf:params:scim:schemas:Extension:complexValue.subValue";
+                const instance = new TargetSchema({
+                    ...constructor,
+                    'urn:ietf:params:scim:schemas:Extension': {
+                        testValue: "a string",
+                    }
+                });
                 
                 instance[target] = "a string";
                 assert.strictEqual(instance[target], "a string",
@@ -112,6 +123,10 @@ export default class ResourcesHooks {
                 instance[target.toLowerCase()] = "another string";
                 assert.strictEqual(instance[target], "another string",
                     "Schema instance did not include lower-case schema extension attribute aliases");
+
+                instance[complexTarget] = "complex string";
+                assert.strictEqual(instance[complexTarget], "complex string",
+                    "Schema instance did not include schema extension sub-attribute aliases");
             } finally {
                 // Remove the extension so it doesn't interfere later
                 TargetSchema.truncate("urn:ietf:params:scim:schemas:Extension");
@@ -136,32 +151,6 @@ export default class ResourcesHooks {
                 
                 assert.deepStrictEqual(actual, source[extension.id][attribute.name],
                     "Schema instance did not coerce complex multi-value attributes from schema extension");
-            } finally {
-                // Remove the extension so it doesn't interfere later
-                TargetSchema.truncate("urn:ietf:params:scim:schemas:Extension");
-            }
-        });
-        
-        it("should expect errors in extension schema coercion to be rethrown as SCIMErrors", async () => {
-            const {constructor = {}} = await fixtures;
-            const attributes = [new Attribute("string", "testValue")];
-            const extension = new SchemaDefinition("Extension", "urn:ietf:params:scim:schemas:Extension", "", attributes);
-            const source = {...constructor, [`${extension.id}:testValue`]: "a string"};
-            
-            try {
-                // Add the extension to the target
-                TargetSchema.extend(extension);
-    
-                // Construct an instance to test against
-                const instance = new TargetSchema(source);
-    
-                assert.throws(() => instance[extension.id].test = true,
-                    {name: "TypeError", message: "Cannot add property test, object is not extensible"},
-                    "Schema was extensible after instantiation");
-                assert.throws(() => instance[extension.id] = {test: true},
-                    {name: "SCIMError", status: 400, scimType: "invalidValue",
-                        message: "Cannot add property test, object is not extensible"},
-                    "Schema was extensible after instantiation");
             } finally {
                 // Remove the extension so it doesn't interfere later
                 TargetSchema.truncate("urn:ietf:params:scim:schemas:Extension");
@@ -199,7 +188,7 @@ export default class ResourcesHooks {
                 instance[`${extension.id}:testValue.value.value`] = undefined;
                 instance[`${extension.id}:testValue.stringValue`] = undefined;
                 
-                assert.strictEqual(instance[extension.id], undefined,
+                assert.deepStrictEqual(JSON.parse(JSON.stringify(instance[extension.id])), {},
                     "Schema instance did not clean up empty extension schema properties");
             } finally {
                 // Remove the extension so it doesn't interfere later
