@@ -32,6 +32,7 @@ const TestSchema = createSchemaClass({
 const TestSchemaExtended = createSchemaClass({
     name: "TestExtended", id: "urn:ietf:params:scim:schemas:extension:test:2.0:TestExtended", description: "A Test Extended",
     attributes: [
+        new Attribute("string", "extendedSimple", {}),
         new Attribute("complex", "extendedComplex", {}, [
             new Attribute("string", "subStr", {}),
         ])

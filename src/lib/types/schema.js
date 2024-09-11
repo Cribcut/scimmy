@@ -159,7 +159,7 @@ export class Schema {
                         
                         // Return the value with JSON stringifier attached, marked as 
                         defineToJSONProperty(resource[extension.id], extension, resource[extension.id]);
-                        return Object.assign(Object.preventExtensions(resource[extension.id]), value);
+                        return Object.assign(resource[extension.id], value);
                     } catch (ex) {
                         // Rethrow attribute coercion exceptions as SCIM errors
                         throw new SCIMError(400, "invalidValue", ex.message);

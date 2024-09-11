@@ -157,32 +157,6 @@ export default class ResourcesHooks {
             }
         });
         
-        it("should expect errors in extension schema coercion to be rethrown as SCIMErrors", async () => {
-            const {constructor = {}} = await fixtures;
-            const attributes = [new Attribute("string", "testValue")];
-            const extension = new SchemaDefinition("Extension", "urn:ietf:params:scim:schemas:Extension", "", attributes);
-            const source = {...constructor, [`${extension.id}:testValue`]: "a string"};
-            
-            try {
-                // Add the extension to the target
-                TargetSchema.extend(extension);
-    
-                // Construct an instance to test against
-                const instance = new TargetSchema(source);
-    
-                assert.throws(() => instance[extension.id].test = true,
-                    {name: "TypeError", message: "Cannot add property test, object is not extensible"},
-                    "Schema was extensible after instantiation");
-                assert.throws(() => instance[extension.id] = {test: true},
-                    {name: "SCIMError", status: 400, scimType: "invalidValue",
-                        message: "Cannot add property test, object is not extensible"},
-                    "Schema was extensible after instantiation");
-            } finally {
-                // Remove the extension so it doesn't interfere later
-                TargetSchema.truncate("urn:ietf:params:scim:schemas:Extension");
-            }
-        });
-        
         it("should clean up empty extension schema properties", async () => {
             // Get attributes for the extension ready
             const attributes = [
